@@ -1,9 +1,8 @@
 require 'dotenv'
 Dotenv.load
 
-require 'pp'
-
 require 'sinatra'
+require 'sinatra/redis'
 require 'json'
 
 require 'addressable/uri'

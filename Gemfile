@@ -7,6 +7,7 @@ gem 'dotenv'
 gem 'json'
 gem 'pusher'
 gem 'sinatra'
+gem 'sinatra-redis'
 gem 'thin'
 
 group :test do
