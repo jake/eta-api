@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.3.6)
     daemons (1.1.9)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
@@ -34,6 +35,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable
   dotenv
   json
   pusher
