@@ -46,7 +46,7 @@ class Directions < ActiveRecord::Base
       seconds = 0
 
       route['legs'].each do |leg|
-        seconds += leg['distance']['value']
+        seconds += leg['duration']['value'].to_i
       end
 
       estimates.push seconds
