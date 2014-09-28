@@ -117,7 +117,7 @@ end
 get '/directions/:token' do
   directions = Directions.find_by_token(params[:token])
 
-  directions.as_json(methods: :estimate).to_json
+  directions.as_json(methods: [:estimate, :url]).to_json
 end
 
 # UPDATE
@@ -140,4 +140,10 @@ get '/:token' do
   @directions = Directions.find_by_token(params[:token])
 
   erb :share
+end
+
+get '/' do
+  content_type :html
+
+  erb :new
 end
