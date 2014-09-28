@@ -92,7 +92,7 @@ end
 get '/directions/:token' do
   directions = Directions.find_by_token(params[:token])
 
-  directions.to_json
+  directions.as_json(methods: :estimates).to_json
 end
 
 post '/directions/:token' do
