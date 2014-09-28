@@ -2,8 +2,9 @@ require 'dotenv'
 Dotenv.load
 
 require 'sinatra'
-require 'sinatra/redis'
 require 'json'
+
+require 'sinatra/activerecord'
 
 require 'addressable/uri'
 require 'open-uri'
@@ -20,41 +21,27 @@ class String
   end
 end
 
-class Directions
-  @travel_mode = 'walking'
-  @destination = nil
-  @origin = nil
+class Directions < ActiveRecord::Base
+  @directions_json = {}
 
-  @json = {}
-
-  def travel_mode=(val)
-    @travel_mode = val
-  end
-
-  def destination=(val)
-    @destination = val
-  end
-
-  def origin=(val)
-    @origin = val
-  end
+  before_create :generate_token
 
   def url
     base = "https://maps.googleapis.com/maps/api/directions/json?alternatives=true&key=#{ENV['GOOGLE_API_KEY']}&departure_time=#{Time.now.to_i}"
 
-    base.merge_query_params({ 'mode' => @travel_mode, 'destination' => @destination, 'origin' => @origin })
+    base.merge_query_params({ 'mode' => travel_mode, 'destination' => destination, 'origin' => origin })
   end
 
-  def get_json
-    @json = JSON.load(open(url))
+  def get_directions_json
+    @directions_json = JSON.load(open(url))
   end
 
   def estimates
-    get_json
+    get_directions_json
 
     estimates = []
 
-    @json['routes'].each do |route|
+    @directions_json['routes'].each do |route|
       seconds = 0
 
       route['legs'].each do |leg|
@@ -66,16 +53,43 @@ class Directions
 
     estimates.sort
   end
+
+  protected
+
+  def generate_token(length=10)
+    self.token = loop do
+      random_token = SecureRandom.hex(length)
+      break random_token unless Directions.exists?(token: random_token)
+    end
+  end
 end
 
-get '/estimates/:travel_mode/:origin/:destination' do
+before do
   content_type :json
+end
 
-  api = Directions.new
+post '/new' do
+  directions = Directions.new
 
-  api.travel_mode = params[:travel_mode]
-  api.destination = params[:destination]
-  api.origin = params[:origin]
+  directions.travel_mode = params[:travel_mode] unless params[:travel_mode].nil?
+  directions.destination = params[:destination] unless params[:destination].nil?
+  directions.origin = params[:origin] unless params[:origin].nil?
 
-  { estimates: api.estimates.to_json }.to_json
+  directions.to_json
+end
+
+get '/directions/:token' do
+  directions = Directions.find_by_token(params[:token])
+
+  directions.to_json
+end
+
+post '/directions/:token' do
+  directions = Directions.find_by_token(params[:token])
+
+  directions.travel_mode = params[:travel_mode] unless params[:travel_mode].nil?
+  directions.destination = params[:destination] unless params[:destination].nil?
+  directions.origin = params[:origin] unless params[:origin].nil?
+
+  directions.to_json
 end
