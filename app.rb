@@ -25,7 +25,7 @@ class Directions < ActiveRecord::Base
   @directions_json = {}
 
   before_create :generate_token
-  after_update :push_estimate
+  after_save :push_estimate
 
   def url
     base = "https://maps.googleapis.com/maps/api/directions/json?alternatives=true&key=#{ENV['GOOGLE_API_KEY']}&departure_time=#{Time.now.to_i}"
@@ -79,6 +79,8 @@ class Directions < ActiveRecord::Base
 
   def push_estimate
     return unless changed?
+
+    logger.debug "broadcasting update_estimate to #{token}_channel..."
 
     Pusher["#{token}_channel"].trigger('update_estimate', {
       directions: self.as_json,
