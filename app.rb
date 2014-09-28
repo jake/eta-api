@@ -25,7 +25,7 @@ class Directions < ActiveRecord::Base
   @directions_json = {}
 
   before_create :generate_token
-  after_update :push_estimates
+  after_update :push_estimate
 
   def url
     base = "https://maps.googleapis.com/maps/api/directions/json?alternatives=true&key=#{ENV['GOOGLE_API_KEY']}&departure_time=#{Time.now.to_i}"
@@ -37,7 +37,7 @@ class Directions < ActiveRecord::Base
     @directions_json = JSON.load(open(url))
   end
 
-  def estimates
+  def estimate
     get_directions_json
 
     estimates = []
@@ -52,14 +52,37 @@ class Directions < ActiveRecord::Base
       estimates.push seconds
     end
 
-    estimates.sort
+    estimates.uniq!
+    estimates.sort!
+
+    first = (estimates.first.to_f / 60.0).round(3)
+    last = (estimates.last.to_f / 60.0).round(3)
+
+    unit = "minutes"
+
+    if estimates.size == 0
+      range = "Unknown..."
+      unit = ""
+    elsif estimates.size == 1
+      range = "#{first}"
+      unit = "minute" if first == 1
+    else
+      range = "#{first} to #{last}"
+    end
+
+    {
+      values: estimates,
+      range: range,
+      unit: unit
+    }
   end
 
-  def push_estimates
+  def push_estimate
     return unless changed?
 
-    Pusher["#{token}_channel"].trigger('update_estimates', {
-      estimates: estimates
+    Pusher["#{token}_channel"].trigger('update_estimate', {
+      directions: self.as_json,
+      estimate: estimate
     })
   end
 
@@ -94,7 +117,7 @@ end
 get '/directions/:token' do
   directions = Directions.find_by_token(params[:token])
 
-  directions.as_json(methods: :estimates).to_json
+  directions.as_json(methods: :estimate).to_json
 end
 
 # UPDATE
@@ -108,4 +131,13 @@ post '/directions/:token' do
   directions.save
 
   directions.to_json
+end
+
+# SHARE
+get '/:token' do
+  content_type :html
+
+  @directions = Directions.find_by_token(params[:token])
+
+  erb :share
 end
