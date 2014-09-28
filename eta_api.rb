@@ -77,7 +77,8 @@ before do
   content_type :json
 end
 
-post '/new' do
+# CREATE
+post '/directions' do
   directions = Directions.new
 
   directions.travel_mode = params[:travel_mode] unless params[:travel_mode].nil?
@@ -89,12 +90,14 @@ post '/new' do
   directions.to_json
 end
 
+# SHOW
 get '/directions/:token' do
   directions = Directions.find_by_token(params[:token])
 
   directions.as_json(methods: :estimates).to_json
 end
 
+# UPDATE
 post '/directions/:token' do
   directions = Directions.find_by_token(params[:token])
 
