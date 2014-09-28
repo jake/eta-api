@@ -2,7 +2,7 @@ ENV['RACK_ENV'] = 'test'
 require 'minitest/autorun'
 require 'rack/test'
 
-require_relative 'eta_api.rb'
+require_relative 'app.rb'
  
 include Rack::Test::Methods
  

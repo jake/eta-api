@@ -1,1 +1,1 @@
-web: bundle exec ruby eta_api.rb -p $PORT
+web: bundle exec ruby app.rb -p $PORT

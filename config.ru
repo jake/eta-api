@@ -1,2 +1,2 @@
-require './eta_api'
+require './app'
 run Sinatra::Application
